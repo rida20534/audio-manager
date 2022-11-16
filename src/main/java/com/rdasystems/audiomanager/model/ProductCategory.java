@@ -23,7 +23,7 @@ public class ProductCategory implements Serializable {
     private Long id;
     @Column(name="category_name")
     private String categoryName;
-    @OneToMany(cascade = CascadeType.ALL,mappedBy = "category")
+    @OneToMany(cascade = CascadeType.ALL,mappedBy = "category",fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Product> productSet;
 }

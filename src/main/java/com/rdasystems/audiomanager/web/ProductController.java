@@ -1,17 +1,23 @@
-/***
+/*********************************************************************
  *     @PostConstruct
  *     public void makeList(){}  method avec cette annotation s'execute en premiere
- */
+ * ----HttpHeaders responseHeaders = new HttpHeaders();
+ * ----responseHeaders.set("TotalPages", String.valueOf(totalPages));
+ *-----responseHeaders.set("numberOfElements", String.valueOf(numberOfElements));
+ * ----new HttpEntity<>(results.getContent(),responseHeaders);
+ * //@JsonIgnoreProperties(ignoreUnknown = true)
+ *****************************************************************************************/
 
 package com.rdasystems.audiomanager.web;
 import com.rdasystems.audiomanager.dao.ProductCategoryRepository;
-import com.rdasystems.audiomanager.dao.ProductRepository;
 import com.rdasystems.audiomanager.exception.ProductErrorResponse;
 import com.rdasystems.audiomanager.exception.ProductNotFoundException;
 import com.rdasystems.audiomanager.model.Product;
 import com.rdasystems.audiomanager.model.ProductCategory;
+import com.rdasystems.audiomanager.service.ProductService;
+import com.rdasystems.audiomanager.utility.LocalResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,37 +30,39 @@ import java.util.*;
 public class ProductController {
     List<Product> products;
     @Autowired
-    ProductRepository productRepository;
+    ProductService productService;
     @Autowired
     ProductCategoryRepository productCategoryRepository;
-    @GetMapping("products/category/{categoryid}")
-    public List<Product> filterByCategory(@PathVariable final Long categoryid ){
-        Map map= new HashMap<>();
-        if(map.isEmpty()){
-            productCategoryRepository.findAll().forEach(el->{
-                map.put(el.getId(),el.getProductSet());
-            });
-            if (map.isEmpty()){
-                throw new ProductNotFoundException("");
-            }
-        }
-        if(map.get(categoryid)==null){
-            throw new ProductNotFoundException("no such category ! ");
-        }
+    @GetMapping("products/category")
+    public LocalResponse<Product> filterByCategory(
+                   @RequestParam String page,
+                   @RequestParam String size,
+                   @RequestBody ProductCategory productcategory){
+                   Page<Product> results=productService.findProducstByCategory(productcategory,Integer.parseInt(page),Integer.parseInt(size));
+          return new LocalResponse<>(
+                                 results.getContent(),
+                                 results.getTotalPages(),
+                                 results.getNumberOfElements(),
+                                 results.getNumber());
+    }
 
-        return  (List<Product>) map.get(categoryid);
-    }
-    @GetMapping
-    public List<ProductCategory> allCategories(@PathVariable Long categoryid ){
-     return productCategoryRepository.findAll();
-    }
-@GetMapping("/products")
-@ResponseStatus(HttpStatus.FOUND)
-//@JsonIgnoreProperties(ignoreUnknown = true)
-public List<Product> alproductsroducts(){
-products=productRepository.findAll(PageRequest.of(1,5)).getContent();
-  return products;
+     @GetMapping("/products")
+     @ResponseStatus(HttpStatus.FOUND)
+     public ResponseEntity<LocalResponse<Product>> alproductsroducts(@RequestParam String page,@RequestParam String size){
+        var results=productService.findAll(Integer.parseInt(page),Integer.parseInt(size));
+
+        return new ResponseEntity<>(new LocalResponse<>(results.getContent(),results.getTotalPages(),results.getNumberOfElements(), results.getNumber()),HttpStatus.FOUND);
 }
+    @GetMapping("/products/search")
+    @ResponseStatus(HttpStatus.FOUND)
+    public LocalResponse<Product> searchProductByDescName(@RequestParam String keywords, @RequestParam String page, @RequestParam String size){
+        Page<Product> results=productService.searchByDescriptionAndName(keywords,Integer.parseInt(page),Integer.parseInt(size));
+        int totalPages= results.getTotalPages();
+        int numberOfElements=results.getNumberOfElements();
+        int  numberOfpage=results.getNumber();
+    return new LocalResponse<>(results.getContent(),totalPages,numberOfElements,numberOfpage);
+
+    }
 
 @ExceptionHandler
 public ResponseEntity<ProductErrorResponse> handleException(ProductNotFoundException ex) {
@@ -67,8 +75,8 @@ public ResponseEntity<ProductErrorResponse> handleException(ProductNotFoundExcep
 
 @GetMapping("/products/{productId}")
 @ResponseStatus(HttpStatus.NOT_FOUND)
-    public  Optional<Product> ProductItemById(@PathVariable Long productId){
-    Optional<Product> product=productRepository.findById(productId);
+    public  Product ProductItemById(@PathVariable Long productId){
+    Product product=productService.findById(productId);
     if(product==null){
         System.out.println("product==null");
         throw new ProductNotFoundException("Product with id="+productId+" Not found");
@@ -79,12 +87,12 @@ public ResponseEntity<ProductErrorResponse> handleException(ProductNotFoundExcep
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
     public Product PostAproducts(@RequestBody Product product){
-        product.setCreatedDate(new Date());
         System.out.println("before save @RequestBody hold"+product);
-         productRepository.save(product);
+         productService.save(product);
          System.out.println("after save @RequestBody hold"+product);
        return product;
     }
 }
+
 
 
