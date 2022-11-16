@@ -74,7 +74,7 @@ public ResponseEntity<ProductErrorResponse> handleException(ProductNotFoundExcep
 }
 
 @GetMapping("/products/{productId}")
-@ResponseStatus(HttpStatus.NOT_FOUND)
+@ResponseStatus(HttpStatus.FOUND)
     public  Product ProductItemById(@PathVariable Long productId){
     Product product=productService.findById(productId);
     if(product==null){
@@ -85,14 +85,13 @@ public ResponseEntity<ProductErrorResponse> handleException(ProductNotFoundExcep
     return product;
 }
     @PostMapping("/products")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Product PostAproducts(@RequestBody Product product){
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<Product> PostAproducts(@RequestBody Product product){
         System.out.println("before save @RequestBody hold"+product);
-         productService.save(product);
-         System.out.println("after save @RequestBody hold"+product);
-       return product;
+         //productService.save(product);
+         //System.out.println("after save @RequestBody hold"+product);
+        throw  new ProductNotFoundException("operation is forbidden you can't create a ressource operation forbiden");
+      // return new ResponseEntity<>(product,HttpStatus.FORBIDDEN) ;
     }
 }
-
-
 
