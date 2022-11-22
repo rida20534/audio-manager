@@ -1,7 +1,10 @@
 package com.rdasystems.audiomanager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Data
+@Data @NoArgsConstructor @AllArgsConstructor
 public class Product implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +33,7 @@ public class Product implements Serializable {
     @Column(name="active")
     private boolean active;
     @Column(name="units_in_stock")
-    private int unitsInStock;
+    private Integer unitsInStock;
     @Column(name="created_date")
     @CreationTimestamp
     private Date createdDate;
@@ -40,4 +43,9 @@ public class Product implements Serializable {
     @ManyToOne
     @JoinColumn(name="category_id",nullable = false)
     private ProductCategory category;
+ /*   @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name="inventory_id",nullable = false)
+    private Inventory inventory;*/
+
 }

@@ -9,9 +9,11 @@
  *****************************************************************************************/
 
 package com.rdasystems.audiomanager.web;
+import com.rdasystems.audiomanager.dao.InventoryRepository;
 import com.rdasystems.audiomanager.dao.ProductCategoryRepository;
 import com.rdasystems.audiomanager.exception.ProductErrorResponse;
 import com.rdasystems.audiomanager.exception.ProductNotFoundException;
+import com.rdasystems.audiomanager.model.Inventory;
 import com.rdasystems.audiomanager.model.Product;
 import com.rdasystems.audiomanager.model.ProductCategory;
 import com.rdasystems.audiomanager.service.ProductService;
@@ -31,6 +33,8 @@ public class ProductController {
     List<Product> products;
     @Autowired
     ProductService productService;
+    @Autowired
+    InventoryRepository inventoryRepository;
     @Autowired
     ProductCategoryRepository productCategoryRepository;
     @GetMapping("products/category")
@@ -88,10 +92,14 @@ public ResponseEntity<ProductErrorResponse> handleException(ProductNotFoundExcep
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<Product> PostAproducts(@RequestBody Product product){
         System.out.println("before save @RequestBody hold"+product);
-         //productService.save(product);
-         //System.out.println("after save @RequestBody hold"+product);
-        throw  new ProductNotFoundException("operation is forbidden you can't create a ressource operation forbiden");
-      // return new ResponseEntity<>(product,HttpStatus.FORBIDDEN) ;
+        //Inventory invent=product.getInventory();
+       // System.out.println(invent);
+        productCategoryRepository.save(product.getCategory()) ;
+        productService.save(product);
+
+        //System.out.println("after save @RequestBody hold"+product);
+       // throw  new ProductNotFoundException("operation is forbidden you can't create a ressource operation forbiden");
+      return new ResponseEntity<>(product,HttpStatus.FORBIDDEN) ;
     }
 }
 
